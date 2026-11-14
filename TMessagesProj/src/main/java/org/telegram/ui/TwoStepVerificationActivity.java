@@ -492,7 +492,9 @@ public class TwoStepVerificationActivity extends BaseFragment implements Notific
         TL_account.resetPassword req = new TL_account.resetPassword();
         getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
             needHideProgress();
-            if (response instanceof TL_account.resetPasswordOk) {
+            if (error != null) {
+                showAlertWithText(getString(R.string.ResetPassword), TextUtils.isEmpty(error.text) ? getString(R.string.ErrorOccurred) : error.text);
+            } else if (response instanceof TL_account.resetPasswordOk) {
                 AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
                 builder.setNegativeButton(getString(R.string.OK), null);
                 builder.setTitle(getString(R.string.ResetPassword));
@@ -512,7 +514,7 @@ public class TwoStepVerificationActivity extends BaseFragment implements Notific
                 if (time > 24 * 60 * 60) {
                     timeString = LocaleController.formatPluralString("Days", time / (24 * 60 * 60));
                 } else if (time > 60 * 60) {
-                    timeString = LocaleController.formatPluralString("Hours", time / (24 * 60 * 60));
+                    timeString = LocaleController.formatPluralString("Hours", time / (60 * 60));
                 } else if (time > 60) {
                     timeString = LocaleController.formatPluralString("Minutes", time / 60);
                 } else {
