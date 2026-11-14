@@ -163,4 +163,6 @@ android {
     }
 }
 
-apply plugin: 'com.google.gms.google-services'
+if (!project.hasProperty('mechagramPreview')) {
+    apply plugin: 'com.google.gms.google-services'
+}
