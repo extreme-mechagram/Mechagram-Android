@@ -16,7 +16,8 @@ jobs:
           java-version: '17'
       - uses: gradle/actions/setup-gradle@v4
       - name: Install Android SDK packages
-        run: "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager 'platforms;android-36' 'ndk;27.2.12479018'"
+        run: |
+          "$ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager" 'platforms;android-36' 'ndk;27.2.12479018'
       - name: Build preview APK
         run: bash gradlew -PmechagramPreview :TMessagesProj_AppStandalone:assembleAfatDebug
       - uses: actions/upload-artifact@v4
@@ -24,4 +25,3 @@ jobs:
           name: mechagram-android-debug
           path: TMessagesProj_AppStandalone/build/outputs/apk/afat/debug/*.apk
           if-no-files-found: error
-
