@@ -13,6 +13,10 @@ import ru.noties.jlatexmath.JLatexMathAndroid;
 import ru.noties.jlatexmath.JLatexMathDrawable;
 
 public final class Latex {
+    private static final int MAX_SOURCE_LENGTH = 2048;
+    private static final int MAX_BITMAP_DIMENSION = 2048;
+    private static final long MAX_BITMAP_PIXELS = 256L * 1024;
+
 
     public final Bitmap bitmap;
     public final int width;
@@ -45,7 +49,7 @@ public final class Latex {
     }
     @Nullable
     public static Latex render(@NonNull String source, float textSizePx, boolean needDepth) {
-        if (source == null || source.isEmpty()) {
+        if (source == null || source.isEmpty() || source.length() > MAX_SOURCE_LENGTH) {
             return null;
         }
         try {
@@ -56,7 +60,8 @@ public final class Latex {
                     .build();
             final int w = drawable.getIntrinsicWidth();
             final int h = drawable.getIntrinsicHeight();
-            if (w <= 0 || h <= 0) {
+            if (w <= 0 || h <= 0 || w > MAX_BITMAP_DIMENSION || h > MAX_BITMAP_DIMENSION
+                    || (long) w * h > MAX_BITMAP_PIXELS) {
                 return null;
             }
             final Bitmap bm = Bitmap.createBitmap(w, h, Bitmap.Config.ALPHA_8);
