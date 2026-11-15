@@ -6117,6 +6117,7 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
     }
 
     private boolean firstAppUpdateCheck = true;
+    private final LongSparseArray<String> shownLinkUpdates = new LongSparseArray<>();
     public void checkAppUpdate(boolean force, Browser.Progress progress) {
         if (!ApplicationLoader.isStandaloneBuild() && !ApplicationLoader.isBetaBuild()) {
             return;
@@ -6164,6 +6165,29 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             if (response instanceof TLRPC.TL_help_appUpdate) {
                 final TLRPC.TL_help_appUpdate res = (TLRPC.TL_help_appUpdate) response;
                 AndroidUtilities.runOnUIThread(() -> {
+                    if (res.document == null) {
+                        if (progress != null) {
+                            progress.end();
+                        }
+                        if (currentAccount != accountNum || isFinishing() || isDestroyed() ||
+                                (!force && res.version.equals(shownLinkUpdates.get(accountNum)))) {
+                            return;
+                        }
+                        shownLinkUpdates.put(accountNum, res.version);
+                        AlertDialog.Builder dialog = new AlertDialog.Builder(LaunchActivity.this)
+                                .setTitle(LocaleController.getString(R.string.AppUpdate) + " " + res.version)
+                                .setMessage(res.text)
+                                .setNegativeButton(LocaleController.getString(R.string.Close), null);
+                        if (res.url != null) {
+                            Uri download = Uri.parse(res.url);
+                            if ("https".equalsIgnoreCase(download.getScheme()) && !TextUtils.isEmpty(download.getHost())) {
+                                dialog.setPositiveButton(LocaleController.getString(R.string.AppUpdateDownloadNow),
+                                        (d, which) -> Browser.openUrl(LaunchActivity.this, res.url));
+                            }
+                        }
+                        dialog.show();
+                        return;
+                    }
                     if (SharedConfig.pendingAppUpdate != null && SharedConfig.pendingAppUpdate.version.equals(res.version)) {
                         return;
                     }
