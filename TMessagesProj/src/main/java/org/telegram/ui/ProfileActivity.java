@@ -10920,7 +10920,7 @@ public class ProfileActivity extends BaseFragment implements NotificationCenter.
         balanceDividerRow = -1;
         hasMusic = false;
         hasBalance = userId != 0 && userInfo != null && userInfo.wallet_card != null
-                && (imageUpdater == null || myProfile);
+                && (imageUpdater == null || myProfile || userId == getUserConfig().getClientUserId());
 
         unblockRow = -1;
         joinRow = -1;
