@@ -763,6 +763,9 @@ public class GramWallet implements GramWalletStreaming.IGramWalletStreamingSubsc
     }
 
     public static boolean addressEquals(String first, String second) {
+        if (first != null && first.startsWith("mechagram:")) {
+            return first.equals(second);
+        }
         String a = transferRawAddress(first);
         String b = transferRawAddress(second);
         return a != null && a.equals(b);

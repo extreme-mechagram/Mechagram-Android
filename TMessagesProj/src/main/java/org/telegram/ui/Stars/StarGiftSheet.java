@@ -1146,7 +1146,7 @@ public class StarGiftSheet extends BottomSheetWithRecyclerListView implements No
             .addIf(canSetAsTheme(), R.drawable.msg_colors, getString(R.string.GiftThemesSetIn), this::openSetAsTheme)
             .addIf(walletCollectible == null && myProfile && savedStarGift != null && isMine(currentAccount, dialogId), savedStarGift != null && !savedStarGift.unsaved ? R.drawable.menu_hide_from_profile : R.drawable.menu_show_on_profile, getString(savedStarGift != null && !savedStarGift.unsaved ? R.string.Gift2HideFromProfile : R.string.Gift2ShowOnProfile), this::toggleShow)
             .addIf(walletCollectible == null && canTransfer(), R.drawable.menu_transfer, getString(R.string.Gift2TransferOption), this::openTransfer)
-            .addIf(walletCollectible != null, R.drawable.menu_transfer, getString(R.string.Gift2TransferOption), this::openWalletTransfer)
+            .addIf(walletCollectible != null && (walletCollectible.address == null || !walletCollectible.address.startsWith("mechagram:")), R.drawable.menu_transfer, getString(R.string.Gift2TransferOption), this::openWalletTransfer)
             .addIf(savedStarGift == null && getDialogId() != 0, R.drawable.msg_view_file, getString(R.string.Gift2ViewInProfile), this::openInProfile)
             .addIf(canDelete(), R.drawable.msg_delete, getString(R.string.Gift2DeleteOption), true, this::deleteGift)
             .setDrawScrim(false)
