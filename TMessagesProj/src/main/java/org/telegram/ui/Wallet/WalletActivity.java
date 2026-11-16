@@ -36,6 +36,7 @@ import android.graphics.drawable.ShapeDrawable;
 import android.graphics.drawable.shapes.RoundRectShape;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.Editable;
 import android.text.SpannableString;
@@ -95,6 +96,7 @@ import org.telegram.tgnet.tl.TL_account;
 import org.telegram.tgnet.tl.TL_toncenter;
 import org.telegram.tgnet.tl.TL_wallet;
 import org.telegram.tgnet.tl.TL_stars;
+import org.telegram.ui.ProfileActivity;
 import org.telegram.ui.Gifts.GiftSheet;
 import org.telegram.ui.Stars.StarGiftSheet;
 import org.telegram.ui.ActionBar.ActionBarMenu;
@@ -259,6 +261,7 @@ public class WalletActivity extends UniversalFragment implements NotificationCen
     // Set when collectibles were requested before they loaded (e.g. right after a gift withdrawal).
     private boolean pendingShowCollectibles;
     private static final int RETRY_NFTS = -10001;
+    private static final int OPEN_MECHAGRAM_GIFTS = -10002;
     private final Runnable onNftsChanged = () -> {
         if (giftStickers != null && nftsList != null) giftStickers.sync(nftsList);
         final boolean hasItems = nftsList != null && !nftsList.collectibles.isEmpty();
@@ -3629,6 +3632,7 @@ public class WalletActivity extends UniversalFragment implements NotificationCen
         cardItemPosition = items.size();
         items.add(UItem.asCustomShadow(cardShadowView, true));
         items.add(UItem.asCustomShadow(buttonsContainer));
+        items.add(UItem.asButton(OPEN_MECHAGRAM_GIFTS, LocaleController.getString(R.string.WalletMechagramGifts)));
         showingLearnCells = shouldShowLearnCells();
         if (showingLearnCells) {
             items.add(LearnCell.Factory.of(R.drawable.wallet_learn_instant, LocaleController.getString(R.string.WalletSendInstantly), LocaleController.getString(R.string.WalletSendInstantlyInfo)));
@@ -3842,6 +3846,13 @@ public class WalletActivity extends UniversalFragment implements NotificationCen
 
     @Override
     protected void onClick(UItem item, View view, int position, float x, float y) {
+        if (item.id == OPEN_MECHAGRAM_GIFTS) {
+            Bundle args = new Bundle();
+            args.putLong("user_id", getUserConfig().getClientUserId());
+            args.putBoolean("open_gifts", true);
+            presentFragment(new ProfileActivity(args));
+            return;
+        }
         if (item.object instanceof TL_wallet.nftItem) {
             openWalletCollectible((TL_wallet.nftItem) item.object);
             return;

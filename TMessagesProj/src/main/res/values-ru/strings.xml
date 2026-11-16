@@ -292,4 +292,5 @@
     <string name="WalletReceiveInfo">Поделитесь адресом или QR-кодом,\nчтобы получить GRAM.</string>
     <string name="GramEarnings">Доход в GRAM</string>
     <string name="GramEarningsTitle">Доход в GRAM</string>
+    <string name="WalletMechagramGifts">Подарки Mechagram</string>
 </resources>
