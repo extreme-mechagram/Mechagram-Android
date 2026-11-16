@@ -6146,9 +6146,6 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
             });
             return;
         }
-        if (!force && Math.abs(System.currentTimeMillis() - SharedConfig.lastUpdateCheckTime) < MessagesController.getInstance(0).updateCheckDelay * 1000) {
-            return;
-        }
         final TLRPC.TL_help_getAppUpdate req = new TLRPC.TL_help_getAppUpdate();
         try {
             req.source = ApplicationLoader.applicationContext.getPackageManager().getInstallerPackageName(ApplicationLoader.applicationContext.getPackageName());
@@ -6188,14 +6185,28 @@ public class LaunchActivity extends BasePermissionsActivity implements INavigati
                         dialog.show();
                         return;
                     }
+                    if (currentAccount != accountNum || isFinishing() || isDestroyed()) {
+                        if (progress != null) {
+                            progress.end();
+                        }
+                        return;
+                    }
                     if (SharedConfig.pendingAppUpdate != null && SharedConfig.pendingAppUpdate.version.equals(res.version)) {
+                        if (ApplicationLoader.isStandaloneBuild()) {
+                            FileLoader.getInstance(accountNum).loadFile(res.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+                        }
+                        if (progress != null) {
+                            progress.end();
+                        }
                         return;
                     }
                     final boolean newVersionAvailable = SharedConfig.setNewAppVersionAvailable(res);
                     if (newVersionAvailable) {
                         if (res.can_not_skip) {
                             showUpdateActivity(accountNum, res, false);
-                        } else if (ApplicationLoader.isStandaloneBuild() || BuildVars.DEBUG_VERSION) {
+                        } else if (ApplicationLoader.isStandaloneBuild()) {
+                            FileLoader.getInstance(accountNum).loadFile(res.document, "update", FileLoader.PRIORITY_NORMAL, 1);
+                        } else if (BuildVars.DEBUG_VERSION) {
                             ApplicationLoader.applicationLoaderInstance.showUpdateAppPopup(LaunchActivity.this, res, accountNum);
                         }
                         NotificationCenter.getGlobalInstance().postNotificationName(NotificationCenter.appUpdateAvailable);
