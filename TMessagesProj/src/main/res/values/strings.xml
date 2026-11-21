@@ -11680,4 +11680,10 @@
     <string name="FpnvConsentSimSlotValue">SIM %1$d</string>
     <string name="FpnvConsentPhoneNumber">Phone Number</string>
     <string name="WalletMechagramGifts">Mechagram Gifts</string>
+    <string name="MechagramDeleteAccountNow">Delete account</string>
+    <string name="MechagramDeleteAccountTitle">Delete account</string>
+    <string name="MechagramDeleteAccountText">Your chats, messages, gifts and Stars and GRAM balances will be deleted for good. A new account on this phone number will not get the starting Stars and GRAM again.</string>
+    <string name="MechagramDeleteAccountFinal">This cannot be undone. Delete the account now?</string>
+    <string name="MechagramDeleteAccountConfirm">Delete</string>
+    <string name="MechagramDeleteAccountScheduled">This account is protected by a cloud password, so it will be deleted in 7 days. You can cancel with the link from the service notification.</string>
 </resources>

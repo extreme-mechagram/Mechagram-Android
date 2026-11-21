@@ -142,6 +142,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
     private int advancedSectionRow;
     @Keep
     private int deleteAccountRow;
+    private int deleteAccountNowRow;
     private int deleteAccountDetailRow;
     private int botsSectionRow;
     private int passportRow;
@@ -339,6 +340,8 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             } else if (position == webSessionsRow) {
                 webSessionsActivityPreload.resetFragment();
                 presentFragment(webSessionsActivityPreload);
+            } else if (position == deleteAccountNowRow) {
+                showDeleteAccountNow();
             } else if (position == deleteAccountRow) {
                 if (getParentActivity() == null) {
                     return;
@@ -780,6 +783,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         }
         advancedSectionRow = rowCount++;
         deleteAccountRow = rowCount++;
+        deleteAccountNowRow = rowCount++;
         deleteAccountDetailRow = rowCount++;
         botsSectionRow = rowCount++;
         if (getUserConfig().hasSecureData) {
@@ -1050,6 +1054,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                     position == voicesRow && !getContactsController().getLoadingPrivacyInfo(ContactsController.PRIVACY_RULES_TYPE_VOICE_MESSAGES) ||
                     position == noncontactsRow ||
                     position == deleteAccountRow && !getContactsController().getLoadingDeleteInfo() ||
+                    position == deleteAccountNowRow ||
                     position == newChatsRow && !getContactsController().getLoadingGlobalSettings() ||
                     position == emailLoginRow || position == paymentsClearRow || position == secretMapRow ||
                     position == contactsSyncRow || position == passportRow || position == contactsDeleteRow ||
@@ -1080,6 +1085,14 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                 case 5:
                     view = new TextCell(mContext);
                     break;
+                case 6: {
+                    // Destructive row: its own view type so the red text never
+                    // leaks into recycled ordinary settings rows.
+                    TextSettingsCell cell = new TextSettingsCell(mContext);
+                    ThemeBind.textColor(cell.getTextView(), Theme.key_text_RedRegular);
+                    view = cell;
+                    break;
+                }
                 case 3:
                 default:
                     view = new TextCheckCell(mContext);
@@ -1091,6 +1104,9 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
         @Override
         public void onBindViewHolder(RecyclerView.ViewHolder holder, int position) {
             switch (holder.getItemViewType()) {
+                case 6:
+                    ((TextSettingsCell) holder.itemView).setText(getString(R.string.MechagramDeleteAccountNow), false);
+                    break;
                 case 0:
                     boolean showLoading = false;
                     CharSequence value = null;
@@ -1217,7 +1233,7 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
                                 value = formatPluralString("Days", ttl);
                             }
                         }
-                        textCell.setTextAndValue(getString("DeleteAccountIfAwayFor3", R.string.DeleteAccountIfAwayFor3), value, deleteAccountUpdate, false);
+                        textCell.setTextAndValue(getString("DeleteAccountIfAwayFor3", R.string.DeleteAccountIfAwayFor3), value, deleteAccountUpdate, true);
                         deleteAccountUpdate = false;
                     } else if (position == paymentsClearRow) {
                         textCell.setText(getString("PrivacyPaymentsClear", R.string.PrivacyPaymentsClear), true);
@@ -1405,6 +1421,9 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
 
         @Override
         public int getItemViewType(int position) {
+            if (position == deleteAccountNowRow) {
+                return 6;
+            }
             if (position == passportRow || position == lastSeenRow || position == phoneNumberRow ||
                     position == deleteAccountRow || position == webSessionsRow || position == groupsRow || position == paymentsClearRow ||
                     position == secretMapRow || position == contactsDeleteRow || position == botsBiometryRow) {
@@ -1422,6 +1441,75 @@ public class PrivacySettingsActivity extends BaseFragment implements Notificatio
             }
             return 0;
         }
+    }
+
+    // Immediate account deletion (account.deleteAccount). Two confirmations;
+    // accounts with an old cloud password get the server's 7-day window
+    // (2FA_CONFIRM_WAIT_x) and are told so instead of an error.
+    private void showDeleteAccountNow() {
+        if (getParentActivity() == null) {
+            return;
+        }
+        AlertDialog.Builder builder = new AlertDialog.Builder(getParentActivity());
+        builder.setTitle(getString(R.string.MechagramDeleteAccountTitle));
+        builder.setMessage(getString(R.string.MechagramDeleteAccountText));
+        builder.setNegativeButton(getString(R.string.Cancel), null);
+        builder.setPositiveButton(getString(R.string.MechagramDeleteAccountConfirm), (dialog, which) -> {
+            if (getParentActivity() == null) {
+                return;
+            }
+            AlertDialog.Builder second = new AlertDialog.Builder(getParentActivity());
+            second.setTitle(getString(R.string.MechagramDeleteAccountTitle));
+            second.setMessage(getString(R.string.MechagramDeleteAccountFinal));
+            second.setNegativeButton(getString(R.string.Cancel), null);
+            second.setPositiveButton(getString(R.string.MechagramDeleteAccountConfirm), (d2, w2) -> requestDeleteAccountNow());
+            AlertDialog secondDialog = second.create();
+            showDialog(secondDialog);
+            TextView secondButton = (TextView) secondDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+            if (secondButton != null) {
+                ThemeBind.textColor(secondButton, Theme.key_text_RedBold);
+            }
+        });
+        AlertDialog alertDialog = builder.create();
+        showDialog(alertDialog);
+        TextView button = (TextView) alertDialog.getButton(DialogInterface.BUTTON_POSITIVE);
+        if (button != null) {
+            ThemeBind.textColor(button, Theme.key_text_RedBold);
+        }
+    }
+
+    private void requestDeleteAccountNow() {
+        if (getParentActivity() == null) {
+            return;
+        }
+        final AlertDialog progressDialog = new AlertDialog(getParentActivity(), AlertDialog.ALERT_TYPE_SPINNER);
+        progressDialog.setCanCancel(false);
+        progressDialog.show();
+        TL_account.deleteAccount req = new TL_account.deleteAccount();
+        req.reason = "Manual";
+        getConnectionsManager().sendRequest(req, (response, error) -> AndroidUtilities.runOnUIThread(() -> {
+            try {
+                progressDialog.dismiss();
+            } catch (Exception e) {
+                FileLog.e(e);
+            }
+            if (response instanceof TLRPC.TL_boolTrue) {
+                getMessagesController().performLogout(0);
+                return;
+            }
+            if (getParentActivity() == null || (error != null && error.code == -1000)) {
+                return;
+            }
+            AlertDialog.Builder result = new AlertDialog.Builder(getParentActivity());
+            result.setTitle(getString(R.string.MechagramDeleteAccountTitle));
+            if (error != null && error.text != null && error.text.startsWith("2FA_CONFIRM_WAIT_")) {
+                result.setMessage(getString(R.string.MechagramDeleteAccountScheduled));
+            } else {
+                result.setMessage(getString(R.string.ErrorOccurred) + (error != null && error.text != null ? "\n" + error.text : ""));
+            }
+            result.setPositiveButton(getString(R.string.OK), null);
+            showDialog(result.create());
+        }));
     }
 
     private SpannableString premiumStar;

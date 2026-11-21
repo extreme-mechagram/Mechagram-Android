@@ -293,4 +293,10 @@
     <string name="GramEarnings">Доход в GRAM</string>
     <string name="GramEarningsTitle">Доход в GRAM</string>
     <string name="WalletMechagramGifts">Подарки Mechagram</string>
+    <string name="MechagramDeleteAccountNow">Удалить аккаунт</string>
+    <string name="MechagramDeleteAccountTitle">Удаление аккаунта</string>
+    <string name="MechagramDeleteAccountText">Чаты, сообщения, подарки и балансы звёзд и GRAM будут удалены навсегда. Новый аккаунт на этот номер не получит стартовые звёзды и GRAM повторно.</string>
+    <string name="MechagramDeleteAccountFinal">Это действие нельзя отменить. Удалить аккаунт сейчас?</string>
+    <string name="MechagramDeleteAccountConfirm">Удалить</string>
+    <string name="MechagramDeleteAccountScheduled">Аккаунт защищён облачным паролем, поэтому он будет удалён через 7 дней. Отменить удаление можно по ссылке из служебного уведомления.</string>
 </resources>
